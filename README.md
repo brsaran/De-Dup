@@ -165,6 +165,35 @@ This disables ICD equivalence matching — but:
 
 ---
 
+
+## 📤 Output Description
+
+After successfully running the tool, the program produces **four output files** in the working directory based on the provided job name.
+
+### 📁 Output Files:
+
+| File Name       | Description                                                                 |
+|------------------|-----------------------------------------------------------------------------|
+| `QC.xlsx`        | Cleaned version of **Input File 1** (`-f1`)                                 |
+| `TC.xlsx`        | Cleaned version of **Input File 2** (`-f2`)                                 |
+| `results.xlsx`   | Final result file with **matched record pairs** and corresponding **match scores** |
+| `score.xlsx`     | Contains only the **score summary** (probability values) for each matched pair |
+
+---
+
+### 📘 File Details
+
+#### 🔹 `results.xlsx`
+
+- Contains matched pairs of records from both input files.
+- Each match includes two rows of data (one from each file) followed by a third row that shows the **match scores for each variable** used in comparison.
+
+#### 🔹 `score.xlsx`
+
+- Contains a **summary view** of the matching results.
+- Includes unique identifiers from both input files along with a **combined match probability score** for each matched pair.
+- This file can be used for **filtering high-confidence matches** based on probability thresholds.
+
 ## 🧰 Support
 
 For issues, questions, or suggestions, please open an issue in this repository or contact saravanan.vij@icmr.gov.in or brsaran@gmail.com.
