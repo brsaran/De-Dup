@@ -65,7 +65,7 @@ If you prefer using a dependency file:
 
 ## ▶️ Running the Tool
 
-Use the following command to execute the program:
+Use the following command to execute the program: * The tool is OS independent and execute python code using corresponding command. Below is for running in windows OS
 
 ```bash
 python DeDup.py -f1 q.xlsx -f2 t.xlsx -j TEST
