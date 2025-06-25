@@ -197,3 +197,10 @@ After successfully running the tool, the program produces **four output files** 
 ## 🧰 Support
 
 For issues, questions, or suggestions, please open an issue in this repository or contact saravanan.vij@icmr.gov.in or brsaran@gmail.com.
+
+## Disclaimer
+
+This program is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**; without even the implied warranty of **MERCHANTABILITY** or **FITNESS FOR A PARTICULAR PURPOSE**.  
+See the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.html) for more details.
+
+The authors shall not be held liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising in any way out of the use of this software.
