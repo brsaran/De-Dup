@@ -85,7 +85,7 @@ python DeDup.py -f1 q.xlsx -f2 t.xlsx -j TEST
 
 ## 🧾 Column Mapping Table
 
-This table defines the standard column names, their data types, and the customizable equivalents used during processing.
+The file S_column.xlsx is used for column mapping. This table defines the standard column names, their data types, and the customizable equivalents used during processing.
 
 | VARIABLE      | DATA_TYPE | EQU_C_NAME   |
 |---------------|-----------|--------------|
