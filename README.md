@@ -67,8 +67,10 @@ If you prefer using a dependency file:
 
 ## Module Compatibility
 
-The following table lists the recommended Python and module versions for running the DeDup and DeDup_updated code.
+The following table lists the recommended Python and module versions for running the DeDup and DeDup_multi code.
 
+| Dependency | Version |
+| :--- | :--- |
 | Python | 3.11 or 3.12+ |
 | pandas | 2.2.3 or newer |
 | NumPy | 2.x |
@@ -88,7 +90,7 @@ Use the following command to execute the program: * The tool is OS independent a
 ```bash
 python DeDup.py -f1 q.xlsx -f2 t.xlsx -j TEST
 or
-python DeDup_updated.py -f1 q.xlsx -f2 t.xlsx -j TEST
+python DeDup_multi.py -f1 q.xlsx -f2 t.xlsx -j TEST -w 8
 ```
 
 ### 🔹 Argument Details:
