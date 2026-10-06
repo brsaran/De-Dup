@@ -154,7 +154,7 @@ def validate_excel_columns(rules_file, excel_file, output_file, warn):
     df_excel = pd.read_excel(excel_file, sheet_name=0, dtype=str)  # Read as strings to validate types
 
     # Replace multiple consecutive spaces with a single space in all columns
-    df_excel = df_excel.applymap(lambda x: ' '.join(str(x).split()) if pd.notna(x) else x)
+    df_excel = df_excel.map(lambda x: ' '.join(str(x).split()) if pd.notna(x) else x)
 
     # Identify special columns based on VARIABLE values
     special_columns = set(df_rules.loc[df_rules["VARIABLE"].isin(["FULL_NAME", "FULL_ADDRESS", "RELATIVE"]), "EQU_C_NAME"])
@@ -364,16 +364,27 @@ def save_dataframe_to_excel(df, filename):
         print(f"Error saving DataFrame: {e}")
 
 
-def extract_matching_records(file1, file2, output_file):
-    # Load the two Excel files
-    df1 = pd.read_excel(file1)  # File 1 containing Q_ID, T_ID, FULL_NAME, etc.
-    df2 = pd.read_excel(file2)  # File 2 containing REF, FULL_NAME, etc.
+def extract_matching_records(file1, file_q, file_t, output_file):
+    """
+    Builds results.xlsx by pairing each (Q_ID, T_ID) row in file1 (score.xlsx)
+    with its matching records:
+      - Q_ID matches are looked up in file_q (QC.xlsx)
+      - T_ID matches are looked up in file_t (TC.xlsx)
+    A blank separator row carrying the TOTAL(PROB) score is inserted after
+    each matched pair.
+    """
+    # Load the three Excel files
+    df1  = pd.read_excel(file1)      # score.xlsx  (Q_ID, T_ID, TOTAL, PROB, ...)
+    df_q = pd.read_excel(file_q)     # QC.xlsx     (REF, ...)
+    df_t = pd.read_excel(file_t)     # TC.xlsx     (REF, ...)
 
     # Ensure required columns exist
     required_columns1 = {"Q_ID", "T_ID", "TOTAL", "FULL_NAME", "FULL_ADDRESS", "AGE", "GENDER", "ICD", "PINCODE", "RELATIVE"}
     required_columns2 = {"REF", "FULL_NAME", "FULL_ADDRESS", "RELATIVE", "ICD", "AGE", "GENDER", "PINCODE"}
 
-    if not required_columns1.issubset(df1.columns) or not required_columns2.issubset(df2.columns):
+    if not required_columns1.issubset(df1.columns) \
+       or not required_columns2.issubset(df_q.columns) \
+       or not required_columns2.issubset(df_t.columns):
         raise ValueError("Required columns are missing in one of the input files.")
 
     result_df = pd.DataFrame()  # Empty DataFrame to store results
@@ -381,21 +392,21 @@ def extract_matching_records(file1, file2, output_file):
     for _, row in df1.iterrows():
         q_id, t_id = row["Q_ID"], row["T_ID"]
 
-        # Extract matching rows from File 2 where REF matches Q_ID
-        qid_matches = df2[df2["REF"] == q_id]
-        # Extract matching rows from File 2 where REF matches T_ID
-        tid_matches = df2[df2["REF"] == t_id]
+        # Extract matching rows from QC.xlsx where REF matches Q_ID
+        qid_matches = df_q[df_q["REF"].astype(str) == str(q_id)]
+        # Extract matching rows from TC.xlsx where REF matches T_ID
+        tid_matches = df_t[df_t["REF"].astype(str) == str(t_id)]
 
         if not qid_matches.empty or not tid_matches.empty:
-            # Create a blank row in File 2 format
-            blank_row = pd.DataFrame([[""] * len(df2.columns)], columns=df2.columns)
+            # Create a blank row in the target-file (TC.xlsx) format
+            blank_row = pd.DataFrame([[""] * len(df_t.columns)], columns=df_t.columns)
 
             # Fill the blank row with TOTAL from File 1
             blank_row["REF"] = f"{row['TOTAL']}({row['PROB']})"
 
-            # Copy matching column values from File 1 to File 2 format
+            # Copy matching column values from File 1 to target-file format
             for col in df1.columns:
-                if col in df2.columns:  # Only insert if column exists in File 2
+                if col in df_t.columns:  # Only insert if column exists in target file
                     blank_row[col] = row[col]
 
             # Append extracted data, then the blank row
@@ -504,9 +515,10 @@ def main():
     T_col = validate_excel_columns("S_column.xlsx", args.f2,"TC.xlsx","Target_File")
     compare_excel_columns("QC.xlsx","TC.xlsx")
 
-#Create dataframe for the cleaned .xlsx
-    Q_df = load_excel_as_dataframe("QC.xlsx")
-    T_df = load_excel_as_dataframe("TC.xlsx")
+#Create dataframe for the cleaned .xlsx (loaded as strings to keep REF/Q_ID/T_ID
+#consistent with validate_excel_columns output and with extract_matching_records)
+    Q_df = pd.read_excel("QC.xlsx", dtype=str)
+    T_df = pd.read_excel("TC.xlsx", dtype=str)
 
 #Create hash for comparison
     Q_hash_NAME = create_hashmap_from_dataframe(Q_df,Q_col['REF'],Q_col['FULL_NAME'])
@@ -569,7 +581,7 @@ def main():
                                 if(C1 >= int(config_data.get('C1', [])[0][1])) or (C1b >= int(config_data.get('C1b', [])[0][1]) and (C1a >= int(config_data.get('C1a', [])[0][1]))):
                                     if(C2 >= int(config_data.get('C2', [])[0][1])):
                                         if C3a >=  int(config_data.get('C3a', [])[0][1]):
-                                            compared_rows = compared_rows._append({
+                                            compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                 'Q_ID': key1,
                                                 'T_ID': key2,
                                                 Q_col['FULL_NAME']: C1,
@@ -581,10 +593,12 @@ def main():
                                                 Q_col['RELATIVE']: C3b1,
                                                 'TOTAL': Total_S,
                                                 'PROB': Norm_score
-                                            }, ignore_index=True)
+                                            }])], ignore_index=True)
+                                            compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                            compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                         elif C3b >= int(config_data.get('C3b', [])[0][1]):
                                             if C3b1 >= int(config_data.get('C3b1', [])[0][1]):
-                                                compared_rows = compared_rows._append({
+                                                compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                     'Q_ID': key1,
                                                     'T_ID': key2,
                                                     Q_col['FULL_NAME']: C1,
@@ -596,9 +610,11 @@ def main():
                                                     Q_col['RELATIVE']: C3b1,
                                                     'TOTAL': Total_S,
                                                     'PROB': Norm_score
-                                                }, ignore_index=True)
+                                                }])], ignore_index=True)
+                                                compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                             elif C3b2 >= int(config_data.get('C3b2', [])[0][1]) and C3b3 >= int(config_data.get('C3b3', [])[0][1]):
-                                                compared_rows = compared_rows._append({
+                                                compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                     'Q_ID': key1,
                                                     'T_ID': key2,
                                                     Q_col['FULL_NAME']: C1,
@@ -610,9 +626,11 @@ def main():
                                                     Q_col['RELATIVE']: C3b1,
                                                     'TOTAL': Total_S,
                                                     'PROB': Norm_score
-                                                }, ignore_index=True)                            
+                                                }])], ignore_index=True)                            
+                                                compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                             elif  C3b4 >= int(config_data.get('C3b4', [])[0][1]) and C3b5 >= int(config_data.get('C3b5', [])[0][1]) and C3b6 >= int(config_data.get('C3b6', [])[0][1]) and C3b7 >= int(config_data.get('C3b7', [])[0][1]) and C3b8 >= int(config_data.get('C3b8', [])[0][1]) and C3b9 >= int(config_data.get('C3b9', [])[0][1]):
-                                                compared_rows = compared_rows._append({
+                                                compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                     'Q_ID': key1,
                                                     'T_ID': key2,
                                                     Q_col['FULL_NAME']: C1,
@@ -624,11 +642,13 @@ def main():
                                                     Q_col['RELATIVE']: C3b1,
                                                     'TOTAL': Total_S,
                                                     'PROB': Norm_score
-                                                }, ignore_index=True)                            
+                                                }])], ignore_index=True)                            
+                                                compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                     else:
                                         if C4a >= int(config_data.get('C4a', [])[0][1]) and C4b >= int(config_data.get('C4b', [])[0][1]) and C4c>= int(config_data.get('C4c', [])[0][1]) and C4d >= int(config_data.get('C4d', [])[0][1]) and C4e >= int(config_data.get('C4e', [])[0][1]):
                                             if C4e1 >= int(config_data.get('C4e1', [])[0][1]):
-                                                compared_rows = compared_rows._append({
+                                                compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                     'Q_ID': key1,
                                                     'T_ID': key2,
                                                     Q_col['FULL_NAME']: C1,
@@ -640,9 +660,11 @@ def main():
                                                     Q_col['RELATIVE']: C3b1,
                                                     'TOTAL': Total_S,
                                                     'PROB': Norm_score
-                                                }, ignore_index=True)         
+                                                }])], ignore_index=True)         
+                                                compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                             elif C4e2 >= int(config_data.get('C4e2', [])[0][1]):
-                                                compared_rows = compared_rows._append({
+                                                compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                     'Q_ID': key1,
                                                     'T_ID': key2,
                                                     Q_col['FULL_NAME']: C1,
@@ -654,7 +676,9 @@ def main():
                                                     Q_col['RELATIVE']: C3b1,
                                                     'TOTAL': Total_S,
                                                     'PROB': Norm_score
-                                                }, ignore_index=True)         
+                                                }])], ignore_index=True)         
+                                                compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                                 else:
                                     if C5 >= int(config_data.get('C5', [])[0][1]):
                                         if C5a >= int(config_data.get('C5a', [])[0][1]):   
@@ -662,7 +686,7 @@ def main():
                                                 if C5c >= int(config_data.get('C5c', [])[0][1]):
                                                     if C5d >= int(config_data.get('C5d', [])[0][1]):
                                                         if C5e >= int(config_data.get('C5e', [])[0][1]):
-                                                            compared_rows = compared_rows._append({
+                                                            compared_rows = pd.concat([compared_rows, pd.DataFrame([{
                                                                 'Q_ID': key1,
                                                                 'T_ID': key2,
                                                                 Q_col['FULL_NAME']: C1,
@@ -674,7 +698,9 @@ def main():
                                                                 Q_col['RELATIVE']: C3b1,
                                                                 'TOTAL': Total_S,
                                                                 'PROB': Norm_score
-                                                            }, ignore_index=True)                                         
+                                                            }])], ignore_index=True)                                         
+                                                            compared_rows['Q_ID'] = compared_rows['Q_ID'].astype(str)
+                                                            compared_rows['T_ID'] = compared_rows['T_ID'].astype(str)
                     pbar.update(1)
 
     
@@ -683,7 +709,7 @@ def main():
     score_merger(Res,Res,"Q_ID","T_ID")
     score_remover(Res,Res,"merged")
     sort_excel_descending(Res,Res,"TOTAL")
-    extract_matching_records(Res,"QC.xlsx","results.xlsx")
+    extract_matching_records(Res,"QC.xlsx","TC.xlsx","results.xlsx")
     F_list = ["score.xlsx","QC.xlsx","TC.xlsx","results.xlsx"]
     move_files_to_folder(args.j,F_list)
 
