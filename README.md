@@ -65,10 +65,32 @@ If you prefer using a dependency file:
 
 ## ▶️ Running the Tool
 
+## Module Compatibility
+
+The following table lists the recommended Python and module versions for running the DeDup and DeDup_updated code.
+
+| Module / Package | DeDup Code — Recommended Version | DeDup_updated Code — Recommended Version 
+|---|---|---|---|
+| Python | 3.10 or 3.11 | 3.11 or 3.12+ |
+| pandas | 1.5.3 | 2.2.3 or newer |
+| NumPy | 1.24.4 | 2.x, compatible with installed pandas |
+| openpyxl | 3.1.5 | 3.1.5 or newer | 
+| fuzzywuzzy | 0.18.0 | 0.18.0 | 
+| tqdm | 4.67.1 | 4.67.1 or newer |
+
+
+### Compatibility Notes
+
+- The updated code uses `DataFrame.map()` instead of the deprecated `DataFrame.applymap()`. This requires pandas 2.1.0 or newer.
+- The updated code replaces the private `DataFrame._append()` method with `pandas.concat()`.
+
+
 Use the following command to execute the program: * The tool is OS independent and execute python code using corresponding command. Below is for running in windows OS
 
 ```bash
 python DeDup.py -f1 q.xlsx -f2 t.xlsx -j TEST
+or
+python DeDup_updated.py -f1 q.xlsx -f2 t.xlsx -j TEST
 ```
 
 ### 🔹 Argument Details:
