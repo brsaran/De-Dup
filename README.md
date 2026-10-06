@@ -69,14 +69,12 @@ If you prefer using a dependency file:
 
 The following table lists the recommended Python and module versions for running the DeDup and DeDup_updated code.
 
-| Module / Package | DeDup Code — Recommended Version | DeDup_updated Code — Recommended Version |
-|------------------|----------------------------------|------------------------------------------|
-| Python           | 3.10 or 3.11                     | 3.11 or 3.12+                            |
-| pandas           | 1.5.3                            | 2.2.3 or newer                           |
-| NumPy            | 1.24.4                           | 2.x    |
-| openpyxl         | 3.1.5                            | 3.1.5 or newer                           |
-| fuzzywuzzy       | 0.18.0                           | 0.18.0                                   |
-| tqdm             | 4.67.1                           | 4.67.1 or newer                          |
+| Python | 3.11 or 3.12+ |
+| pandas | 2.2.3 or newer |
+| NumPy | 2.x |
+| openpyxl | 3.1.5 or newer |
+| fuzzywuzzy | 0.18.0 |
+| tqdm | 4.67.1 or newer |
 
 
 ### Compatibility Notes
