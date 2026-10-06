@@ -73,7 +73,7 @@ The following table lists the recommended Python and module versions for running
 |------------------|----------------------------------|------------------------------------------|
 | Python           | 3.10 or 3.11                     | 3.11 or 3.12+                            |
 | pandas           | 1.5.3                            | 2.2.3 or newer                           |
-| NumPy            | 1.24.4                           | 2.x, compatible with installed pandas    |
+| NumPy            | 1.24.4                           | 2.x    |
 | openpyxl         | 3.1.5                            | 3.1.5 or newer                           |
 | fuzzywuzzy       | 0.18.0                           | 0.18.0                                   |
 | tqdm             | 4.67.1                           | 4.67.1 or newer                          |
