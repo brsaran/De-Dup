@@ -38,11 +38,11 @@ If you prefer using a dependency file:
 1. Create a file named `requirements.txt` with the following contents:
 
     ```txt
-pandas>=2.2.3
-numpy>=2.0.0,<3.0.0
-openpyxl>=3.1.5
-fuzzywuzzy==0.18.0
-tqdm>=4.67.1
+        pandas>=2.2.3
+        numpy>=2.0.0,<3.0.0
+        openpyxl>=3.1.5
+        fuzzywuzzy==0.18.0
+        tqdm>=4.67.1
     ```
 
 2. Install all modules at once:
